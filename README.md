@@ -151,7 +151,7 @@ where "Learn more" points to the host's own help-center article, and, if a host 
 
 **This is never a mandatory field.** Leaving it unanswered is a first-class outcome, not an error to fix. We are not adding a gate to publishing, only the opportunity to disclose. A creator who would rather not engage with the question publishes exactly as before, and nothing is written to the feed.
 
-On publish: write the tag for Yes or No, write nothing for unanswered, and never backfill historical episodes. A standalone interactive demo of this control accompanies this proposal. See `ai-disclosure-ui.html` in this repo or  [the live demo](https://albertobeta.github.io/ai-disclosure-rss-proposal/).
+On publish: write the tag for Yes or No, write nothing for unanswered, and never backfill historical episodes. A standalone interactive demo of this control accompanies this proposal. See `index.html` in this repo or [the live demo](https://albertobeta.github.io/ai-disclosure-rss-proposal/).
 
 ### How apps implement
 
