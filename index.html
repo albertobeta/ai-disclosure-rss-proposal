@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Content Disclosure — UI patterns &amp; RSS output (PSP proposal demo)</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --card: #ffffff;
+    --ink: #1d2330;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #FF6B2C;
+    --yes: #2563eb;
+    --yes-bg: #eff4ff;
+    --no: #16a34a;
+    --no-bg: #f0fdf4;
+    --unset: #9ca3af;
+    --unset-bg: #f3f4f6;
+    --code-bg: #0f172a;
+    --code-ink: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    padding: 32px 16px 72px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  header.page h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header.page p { margin: 0; color: var(--muted); font-size: 14px; }
+  .demo-note {
+    background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+    font-size: 13px; border-radius: 10px; padding: 10px 14px; margin: 18px 0 8px;
+  }
+  h2.sec {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 700; margin: 38px 0 6px;
+  }
+  .sec-lead { font-size: 14px; color: #374151; margin: 0 0 18px; max-width: none; }
+
+  /* recommended copy callout */
+  .copy-callout {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin: 0 0 22px; font-size: 14px;
+  }
+  .copy-callout .q { font-weight: 700; }
+  .copy-callout ul { margin: 8px 0 0; padding-left: 18px; color: #374151; }
+  .copy-callout code { background: #eef0f4; padding: 1px 6px; border-radius: 5px; font-size: 12.5px; }
+
+  /* three pattern cards */
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid3 { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+    display: flex; flex-direction: column;
+  }
+  .pattern-tag {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); margin-bottom: 12px;
+  }
+  .qrow { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; margin-bottom: 12px; }
+  .info {
+    width: 17px; height: 17px; border-radius: 50%; background: var(--muted); color: #fff;
+    font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+    cursor: help; position: relative; flex: 0 0 auto;
+  }
+  .info .tip {
+    visibility: hidden; opacity: 0; transition: opacity .12s;
+    position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%);
+    width: 240px; background: #111827; color: #f3f4f6; font-weight: 400;
+    font-size: 12px; line-height: 1.45; padding: 10px 12px; border-radius: 9px; z-index: 5;
+    text-transform: none; letter-spacing: 0;
+  }
+  .info .tip a { color: #93c5fd; }
+  .info .tip::after {
+    content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #111827;
+  }
+  .info:hover .tip { visibility: visible; opacity: 1; }
+
+  /* widget: dropdown */
+  select.dd {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px;
+    font-size: 13.5px; color: var(--ink); background: #fff; cursor: pointer;
+  }
+  /* widget: radios + buttons share .choice rows */
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice {
+    display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; cursor: pointer; font-size: 13.5px;
+    transition: border-color .12s, background .12s; user-select: none;
+  }
+  .choice:hover { border-color: #cbd5e1; }
+  .choice .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #cbd5e1; flex: 0 0 auto; position: relative; }
+  .choice.on[data-v="yes"] { border-color: var(--yes); background: var(--yes-bg); color: var(--yes); }
+  .choice.on[data-v="yes"] .radio { border-color: var(--yes); }
+  .choice.on[data-v="no"] { border-color: var(--no); background: var(--no-bg); color: var(--no); }
+  .choice.on[data-v="no"] .radio { border-color: var(--no); }
+  .choice.on .radio::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: currentColor; }
+  /* button variant */
+  .btns { display: flex; gap: 8px; }
+  .btn2 {
+    flex: 1; text-align: center; border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 8px; cursor: pointer; font-size: 13.5px; font-weight: 600; background: #fff;
+    transition: border-color .12s, background .12s, color .12s; user-select: none;
+  }
+  .btn2:hover { border-color: #cbd5e1; }
+  .btn2.on[data-v="yes"] { border-color: var(--yes); background: var(--yes); color: #fff; }
+  .btn2.on[data-v="no"] { border-color: var(--no); background: var(--no); color: #fff; }
+
+  .reset { font-size: 11.5px; color: var(--muted); cursor: pointer; margin-top: 10px; text-decoration: underline; align-self: flex-start; }
+  .reset:hover { color: var(--ink); }
+
+  .out-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 14px 0 6px; font-weight: 700; }
+  pre {
+    background: var(--code-bg); color: var(--code-ink); border-radius: 9px; padding: 12px;
+    font-size: 11.5px; line-height: 1.5; margin: 0; overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; min-height: 40px;
+  }
+  pre .tag { color: #7dd3fc; } pre .attr { color: #fda4af; } pre .val { color: #bef264; }
+  .absent { color: #94a3b8; font-style: italic; }
+
+  /* channel rollup */
+  .rollup { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+  @media (max-width: 860px) { .rollup { grid-template-columns: 1fr; } }
+  .episodes { display: flex; flex-direction: column; gap: 12px; }
+  .ep {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+  }
+  .ep .ep-title { font-weight: 600; font-size: 13.5px; margin-bottom: 10px; }
+  .seg { display: flex; gap: 6px; }
+  .seg .s {
+    flex: 1; text-align: center; font-size: 12.5px; padding: 7px 6px; border: 1.5px solid var(--line);
+    border-radius: 8px; cursor: pointer; background: #fff; user-select: none; transition: all .12s; color: var(--muted);
+  }
+  .seg .s.on[data-v="yes"] { border-color: var(--yes); background: var(--yes-bg); color: var(--yes); font-weight: 600; }
+  .seg .s.on[data-v="no"] { border-color: var(--no); background: var(--no-bg); color: var(--no); font-weight: 600; }
+  .seg .s.on[data-v="unset"] { border-color: var(--unset); background: var(--unset-bg); color: #4b5563; font-weight: 600; }
+
+  .channel-panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .channel-panel h3 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .chan-badge { display: inline-block; font-size: 15px; font-weight: 700; border-radius: 999px; padding: 7px 16px; margin-bottom: 10px; }
+  .chan-badge.true { background: var(--yes-bg); color: var(--yes); }
+  .chan-badge.false { background: var(--no-bg); color: var(--no); }
+  .chan-badge.absent { background: var(--unset-bg); color: #4b5563; }
+  .chan-why { font-size: 13px; color: #374151; min-height: 38px; }
+  .chan-why strong { color: var(--ink); }
+  footer { margin-top: 36px; font-size: 12px; color: var(--muted); text-align: center; }
+  footer code { background: #eef0f4; padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1>AI Content Disclosure &middot; UI patterns and RSS output</h1>
+    <p>Demo for the Podcast Standards Project adoption proposal. The spec fixes the three states and the default, not the widget. Below: the same recommended question rendered as a few example UI patterns (and what each writes at the item level), then how items roll up to the channel.</p>
+  </header>
+
+  <div class="demo-note">
+    Standalone demo, not a live product screen. Interact with each control to see the resulting feed output.
+  </div>
+
+  <!-- ============ SECTION 1: THREE UI PATTERNS ============ -->
+  <h2 class="sec">1 &middot; Different UI patterns for the same question</h2>
+  <p class="sec-lead">Hosts are encouraged to use identical wording so creators learn one mental model across the ecosystem, but each host is free to render it however fits their dashboard. The patterns below are just examples (a dropdown, two radios, two buttons); any control works, as long as "pick neither" stays valid (that is the default, "not answered").</p>
+
+  <div class="copy-callout">
+    <div class="q">Recommended copy: &ldquo;Does this episode include AI content?&rdquo;</div>
+    <ul>
+      <li>Yes option: &ldquo;Yes&rdquo; &rarr; writes <code>true</code></li>
+      <li>No option: &ldquo;No&rdquo; &rarr; writes <code>false</code></li>
+      <li>Default: neither selected (not answered) &rarr; writes nothing</li>
+    </ul>
+  </div>
+
+  <div class="grid3">
+    <!-- Pattern A: dropdown -->
+    <div class="card">
+      <div class="pattern-tag">Pattern A &middot; Dropdown</div>
+      <div class="qrow">
+        Does this episode include AI content?
+        <span class="info">i<span class="tip">Disclose when AI is the performer (synthetic voice, narration, hosts), not when it is just a production tool (editing, music, notes). <a href="https://shouldidisclose.ai" target="_blank" rel="noopener">Learn more</a></span></span>
+      </div>
+      <select class="dd" id="ddA">
+        <option value="unset" selected>Not answered (default)</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+      <div class="out-label">Written to the episode &lt;item&gt;</div>
+      <pre id="outA"></pre>
+    </div>
+
+    <!-- Pattern B: radios -->
+    <div class="card">
+      <div class="pattern-tag">Pattern B &middot; Two radios (neither preselected)</div>
+      <div class="qrow">
+        Does this episode include AI content?
+        <span class="info">i<span class="tip">Disclose when AI is the performer (synthetic voice, narration, hosts), not when it is just a production tool (editing, music, notes). <a href="https://shouldidisclose.ai" target="_blank" rel="noopener">Learn more</a></span></span>
+      </div>
+      <div class="choices" id="radB">
+        <div class="choice" data-v="yes"><span class="radio"></span> Yes</div>
+        <div class="choice" data-v="no"><span class="radio"></span> No</div>
+      </div>
+      <span class="reset" id="resetB">Clear (back to not answered)</span>
+      <div class="out-label">Written to the episode &lt;item&gt;</div>
+      <pre id="outB"></pre>
+    </div>
+
+    <!-- Pattern C: buttons -->
+    <div class="card">
+      <div class="pattern-tag">Pattern C &middot; Two buttons / toggle</div>
+      <div class="qrow">
+        Does this episode include AI content?
+        <span class="info">i<span class="tip">Disclose when AI is the performer (synthetic voice, narration, hosts), not when it is just a production tool (editing, music, notes). <a href="https://shouldidisclose.ai" target="_blank" rel="noopener">Learn more</a></span></span>
+      </div>
+      <div class="btns" id="btnC">
+        <div class="btn2" data-v="yes">Yes</div>
+        <div class="btn2" data-v="no">No</div>
+      </div>
+      <span class="reset" id="resetC">Clear (back to not answered)</span>
+      <div class="out-label">Written to the episode &lt;item&gt;</div>
+      <pre id="outC"></pre>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2: CHANNEL ROLLUP ============ -->
+  <h2 class="sec">2 &middot; How items roll up to the channel</h2>
+  <p class="sec-lead">Disclosure is authored per episode. The channel-level value is inferred, never authored, and only claims what the items collectively prove: <strong>true</strong> if any item is true, <strong>false</strong> only if every item is explicitly false, and <strong>absent</strong> the moment a single item is unanswered. Toggle the episodes below and watch the channel value.</p>
+
+  <div class="rollup">
+    <div class="episodes" id="episodes">
+      <div class="ep" data-i="0">
+        <div class="ep-title">Episode 42: AI-narrated special</div>
+        <div class="seg">
+          <div class="s" data-v="yes">Yes</div>
+          <div class="s" data-v="no">No</div>
+          <div class="s on" data-v="unset">Not answered</div>
+        </div>
+      </div>
+      <div class="ep" data-i="1">
+        <div class="ep-title">Episode 41: Two human hosts</div>
+        <div class="seg">
+          <div class="s" data-v="yes">Yes</div>
+          <div class="s" data-v="no">No</div>
+          <div class="s on" data-v="unset">Not answered</div>
+        </div>
+      </div>
+      <div class="ep" data-i="2">
+        <div class="ep-title">Episode 40: published before the feature existed</div>
+        <div class="seg">
+          <div class="s" data-v="yes">Yes</div>
+          <div class="s" data-v="no">No</div>
+          <div class="s on" data-v="unset">Not answered</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="channel-panel">
+      <h3>Inferred channel-level value</h3>
+      <div id="chanBadge" class="chan-badge absent">absent</div>
+      <div id="chanWhy" class="chan-why"></div>
+      <div class="out-label">Resulting feed</div>
+      <pre id="chanFeed"></pre>
+    </div>
+  </div>
+
+  <footer>
+    Carrier: <code>podcast:txt purpose="ai-content"</code> &middot; three states (true / false / absent) &middot; channel value inferred, never authored &middot; PSP adoption proposal
+  </footer>
+</div>
+
+<script>
+  // ---------- item-level output rendering ----------
+  function itemXML(state) {
+    if (state === 'yes') return '<span class="tag">&lt;podcast:txt</span> <span class="attr">purpose=</span><span class="val">"ai-content"</span><span class="tag">&gt;</span><span class="val">true</span><span class="tag">&lt;/podcast:txt&gt;</span>';
+    if (state === 'no')  return '<span class="tag">&lt;podcast:txt</span> <span class="attr">purpose=</span><span class="val">"ai-content"</span><span class="tag">&gt;</span><span class="val">false</span><span class="tag">&lt;/podcast:txt&gt;</span>';
+    return '<span class="absent">(no podcast:txt element written)</span>';
+  }
+
+  // Pattern A: dropdown
+  var ddA = document.getElementById('ddA'), outA = document.getElementById('outA');
+  function renderA() { outA.innerHTML = itemXML(ddA.value); }
+  ddA.addEventListener('change', renderA);
+  renderA();
+
+  // Pattern B: radios (tri-state: clicking selected one clears it)
+  var radB = document.getElementById('radB'), outB = document.getElementById('outB');
+  var stateB = 'unset';
+  function renderB() {
+    radB.querySelectorAll('.choice').forEach(function (c) {
+      c.classList.toggle('on', c.getAttribute('data-v') === stateB);
+    });
+    outB.innerHTML = itemXML(stateB);
+  }
+  radB.querySelectorAll('.choice').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var v = c.getAttribute('data-v');
+      stateB = (stateB === v) ? 'unset' : v; // toggle off if re-clicked
+      renderB();
+    });
+  });
+  document.getElementById('resetB').addEventListener('click', function () { stateB = 'unset'; renderB(); });
+  renderB();
+
+  // Pattern C: buttons
+  var btnC = document.getElementById('btnC'), outC = document.getElementById('outC');
+  var stateC = 'unset';
+  function renderC() {
+    btnC.querySelectorAll('.btn2').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-v') === stateC);
+    });
+    outC.innerHTML = itemXML(stateC);
+  }
+  btnC.querySelectorAll('.btn2').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = b.getAttribute('data-v');
+      stateC = (stateC === v) ? 'unset' : v;
+      renderC();
+    });
+  });
+  document.getElementById('resetC').addEventListener('click', function () { stateC = 'unset'; renderC(); });
+  renderC();
+
+  // ---------- channel rollup ----------
+  var epTitles = ['Episode 42: AI-narrated special', 'Episode 41: Two human hosts', 'Episode 40: published before the feature existed'];
+  var epStates = ['unset', 'unset', 'unset'];
+
+  function channelValue(states) {
+    if (states.some(function (s) { return s === 'yes'; })) return 'true';
+    if (states.length && states.every(function (s) { return s === 'no'; })) return 'false';
+    return 'absent';
+  }
+  function channelWhy(states, value) {
+    if (value === 'true') return '<strong>true</strong>: at least one episode declares AI content. One is enough, so the show demonstrably contains AI.';
+    if (value === 'false') return '<strong>false</strong>: every episode is explicitly declared AI-free, so the whole show is certified AI-free.';
+    var unanswered = states.filter(function (s) { return s === 'unset'; }).length;
+    return '<strong>absent</strong>: ' + unanswered + ' episode' + (unanswered === 1 ? ' is' : 's are') + ' unanswered, so the show cannot be certified either way. Unknown stays unknown.';
+  }
+  function lineFor(i, s) {
+    var inner;
+    if (s === 'yes') inner = '<span class="tag">&lt;podcast:txt</span> <span class="attr">purpose=</span><span class="val">"ai-content"</span><span class="tag">&gt;</span><span class="val">true</span><span class="tag">&lt;/podcast:txt&gt;</span>';
+    else if (s === 'no') inner = '<span class="tag">&lt;podcast:txt</span> <span class="attr">purpose=</span><span class="val">"ai-content"</span><span class="tag">&gt;</span><span class="val">false</span><span class="tag">&lt;/podcast:txt&gt;</span>';
+    else inner = '<span class="absent">(no podcast:txt element)</span>';
+    return '  <span class="tag">&lt;item&gt;</span> <span class="absent">' + epTitles[i].replace(/:.*/, '') + '</span> ' + inner;
+  }
+  function renderChannel() {
+    var val = channelValue(epStates);
+    var badge = document.getElementById('chanBadge');
+    badge.className = 'chan-badge ' + val;
+    badge.textContent = (val === 'absent') ? 'absent (no channel tag)' : val;
+    document.getElementById('chanWhy').innerHTML = channelWhy(epStates, val);
+
+    var chanLine = (val === 'absent')
+      ? '  <span class="absent">(no channel-level podcast:txt element)</span>'
+      : '  <span class="tag">&lt;podcast:txt</span> <span class="attr">purpose=</span><span class="val">"ai-content"</span><span class="tag">&gt;</span><span class="val">' + val + '</span><span class="tag">&lt;/podcast:txt&gt;</span>';
+
+    var feed = '<span class="tag">&lt;channel&gt;</span>\n' +
+               '  <span class="absent">&lt;!-- channel-level: inferred --&gt;</span>\n' +
+               chanLine + '\n\n' +
+               lineFor(0, epStates[0]) + '\n' +
+               lineFor(1, epStates[1]) + '\n' +
+               lineFor(2, epStates[2]) + '\n' +
+               '<span class="tag">&lt;/channel&gt;</span>';
+    document.getElementById('chanFeed').innerHTML = feed;
+  }
+
+  document.querySelectorAll('#episodes .ep').forEach(function (ep) {
+    var i = parseInt(ep.getAttribute('data-i'), 10);
+    ep.querySelectorAll('.s').forEach(function (s) {
+      s.addEventListener('click', function () {
+        epStates[i] = s.getAttribute('data-v');
+        ep.querySelectorAll('.s').forEach(function (x) { x.classList.toggle('on', x === s); });
+        renderChannel();
+      });
+    });
+  });
+  renderChannel();
+</script>
+</body>
+</html>
