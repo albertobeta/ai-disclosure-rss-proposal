@@ -36,7 +36,7 @@ Who experiences this:
 - **EU AI Act** (Article 50, effective August 2026): deepfakes and AI text on matters of public interest must be disclosed; fines up to 15M EUR or 3% of global turnover.
 
 **The community is already discussing it:**
-- Several Podcasting 2.0 namespace Discussion on Github spanning over one year.
+- Several Podcasting 2.0 namespace discussions on Github spanning over one year.
 - Covered repeatedly on Podnews Weekly Review.
 - Raised at the PSP London meetup (May 2026) as [one of four priority proposals](https://podstandards.org/2026/05/22/podcast-rss-nerds-unite-in-london/).
 
