@@ -50,7 +50,7 @@ The core of the proposal is that disclosure has **three** states, not two. The t
 
 | State | Meaning | Written to RSS feed (`<item>` level)|
 |-------|---------|---------------------|
-| **Yes** | The creator confirms the episode includes AI-generated content (per the materiality rule below). | `<podcast:txt purpose="ai-content">true</podcast:txt>` |
+| **Yes** | The creator confirms the episode includes AI-generated content (per [the substance rule below](#shared-editorial-guidance-the-substance-test)). | `<podcast:txt purpose="ai-content">true</podcast:txt>` |
 | **No** | The creator confirms the episode does NOT include AI-generated content. | `<podcast:txt purpose="ai-content">false</podcast:txt>` |
 | **Not answered** | The creator has not engaged with the question, or the episode predates the feature. | No tag written. |
 
